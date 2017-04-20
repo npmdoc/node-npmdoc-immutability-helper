@@ -1,0 +1,234 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="https://github.com/kolodny/immutability-helper#readme">immutability-helper (v2.1.2)</a>
+</h1>
+<h4>mutate a copy of data without changing the original source</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.immutability-helper">module immutability-helper</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.immutability-helper.immutability-helper">
+            function <span class="apidocSignatureSpan"></span>immutability-helper
+            <span class="apidocSignatureSpan">(object, spec)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.immutability-helper.extend">
+            function <span class="apidocSignatureSpan">immutability-helper.</span>extend
+            <span class="apidocSignatureSpan">(directive, fn)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.immutability-helper.newContext">
+            function <span class="apidocSignatureSpan">immutability-helper.</span>newContext
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.immutability-helper" id="apidoc.module.immutability-helper">module immutability-helper</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.immutability-helper.immutability-helper" id="apidoc.element.immutability-helper.immutability-helper">
+        function <span class="apidocSignatureSpan"></span>immutability-helper
+        <span class="apidocSignatureSpan">(object, spec)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function update(object, spec) {
+  invariant(
+    !Array.isArray(spec),
+    'update(): You provided an invalid spec to update(). The spec may ' +
+    'not contain an array except as the value of $set, $push, $unshift, ' +
+    '$splice or any custom command allowing an array value.'
+  );
+
+  invariant(
+    typeof spec === 'object' &amp;&amp; spec !== null,
+    'update(): You provided an invalid spec to update(). The spec and ' +
+    'every included key path must be plain objects containing one of the ' +
+    'following commands: %s.',
+    Object.keys(commands).join(', ')
+  );
+
+  var nextObject = object;
+  var specKeys = getAllKeys(spec)
+  var index, key;
+  for (index = 0; index &lt; specKeys.length; index++) {
+    var key = specKeys[index];
+    if (hasOwnProperty.call(commands, key)) {
+      nextObject = commands[key](spec[key], nextObject, spec, object);
+    } else {
+      var nextValueForKey = update(object[key], spec[key]);
+      if (nextValueForKey !== nextObject[key]) {
+        if (nextObject === object) {
+          nextObject = copy(object);
+        }
+        nextObject[key] = nextValueForKey;
+      }
+    }
+  }
+  return nextObject;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.immutability-helper.extend" id="apidoc.element.immutability-helper.extend">
+        function <span class="apidocSignatureSpan">immutability-helper.</span>extend
+        <span class="apidocSignatureSpan">(directive, fn)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">extend = function (directive, fn) {
+  commands[directive] = fn;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">...
+
+---
+
+The main difference this module has with `react-addons-update` is that
+you can extend this to give it more functionality:
+
+```js
+update.<span class="apidocCodeKeywordSpan">extend</span>('$addtax', function(tax, original) {
+  return original + (tax * original);
+});
+const state = { price: 123 };
+const withTax = update(state, {
+  price: {$addtax: 0.8},
+});
+assert(JSON.stringify(withTax) === JSON.stringify({ price: 221.4 });
+...</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.immutability-helper.newContext" id="apidoc.element.immutability-helper.newContext">
+        function <span class="apidocSignatureSpan">immutability-helper.</span>newContext
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function newContext() {
+  var commands = assign({}, defaultCommands);
+  update.extend = function(directive, fn) {
+    commands[directive] = fn;
+  }
+
+  return update;
+
+  function update(object, spec) {
+    invariant(
+      !Array.isArray(spec),
+      'update(): You provided an invalid spec to update(). The spec may ' +
+      'not contain an array except as the value of $set, $push, $unshift, ' +
+      '$splice or any custom command allowing an array value.'
+    );
+
+    invariant(
+      typeof spec === 'object' &amp;&amp; spec !== null,
+      'update(): You provided an invalid spec to update(). The spec and ' +
+      'every included key path must be plain objects containing one of the ' +
+      'following commands: %s.',
+      Object.keys(commands).join(', ')
+    );
+
+    var nextObject = object;
+    var specKeys = getAllKeys(spec)
+    var index, key;
+    for (index = 0; index &lt; specKeys.length; index++) {
+      var key = specKeys[index];
+      if (hasOwnProperty.call(commands, key)) {
+        nextObject = commands[key](spec[key], nextObject, spec, object);
+      } else {
+        var nextValueForKey = update(object[key], spec[key]);
+        if (nextValueForKey !== nextObject[key]) {
+          if (nextObject === object) {
+            nextObject = copy(object);
+          }
+          nextObject[key] = nextValueForKey;
+        }
+      }
+    }
+    return nextObject;
+  }
+
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
